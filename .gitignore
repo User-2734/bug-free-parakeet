@@ -1,0 +1,5 @@
+__pycache__/
+checkpoints/*
+old/
+id.txt
+venv/
