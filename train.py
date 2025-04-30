@@ -1,7 +1,7 @@
 import environment
 import pygame
 import numpy as np
-import dqn
+from q_learning.agent import DQNAgent
 from typing import Callable
 
 clock = pygame.time.Clock()
@@ -9,7 +9,7 @@ clock = pygame.time.Clock()
 env = environment.RacingEnv()
 state_dim = 34
 action_dim = 3
-agent = dqn.DQNAgent(state_dim, action_dim)
+agent = DQNAgent(state_dim, action_dim)
 target_update_interval = 10
 checkpoint_freq = 25
 
@@ -47,7 +47,7 @@ def movement_to_action(steer, throttle):
 def degrees(rad: float) -> int:
     return int((rad / np.pi) * 180)
 
-def run_episode(seed: int, agent: dqn.DQNAgent, clutter: float, q_func: Callable, manual=False):
+def run_episode(seed: int, agent: DQNAgent, clutter: float, q_func: Callable, manual=False):
     total_reward = 0
     state = env.reset(seed, clutter)
     done = False

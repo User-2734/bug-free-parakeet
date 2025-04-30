@@ -1,7 +1,6 @@
 import environment
 import pygame
-import numpy as np
-import dqn
+from q_learning.agent import DQNAgent
 
 env = environment.RacingEnv()
 
@@ -16,7 +15,6 @@ def action_to_movement(action):
     return steer, throttle
 
 def run_episode(num, agent=None):
-    total_reward = 0
     state = env.reset(num, (6, 6))
     done = False
     while not done:
@@ -40,7 +38,7 @@ def run_episode(num, agent=None):
 env = environment.RacingEnv()
 state_dim = 34
 action_dim = 3
-agent = dqn.DQNAgent(state_dim, action_dim)
+agent = DQNAgent(state_dim, action_dim)
 agent.epsilon = 0
 agent.epsilon_min = 0
 agent.q_net.build(input_shape=(None, state_dim))
