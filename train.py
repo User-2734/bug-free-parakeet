@@ -1,12 +1,10 @@
-import environment
-import pygame
+from sim.environment import RacingEnv
 import numpy as np
 from q_learning.agent import DQNAgent
 from typing import Callable
+import time
 
-clock = pygame.time.Clock()
-
-env = environment.RacingEnv()
+env = RacingEnv()
 state_dim = 34
 action_dim = 3
 agent = DQNAgent(state_dim, action_dim)
@@ -17,13 +15,12 @@ def reverse_leaky_relu(x: float) -> float:
     if x <= 0: return x
     return x * 0.9
 
-def reward_alignment(env: environment.RacingEnv):
+def reward_alignment(env: RacingEnv):
     return reverse_leaky_relu(np.cos(env.relative_angle))
 
-def normal_reward(env: environment.RacingEnv):
+def normal_reward(env: RacingEnv):
     # calculate wehere we are
-    grid_x = int(env.car.x // env.grid.section_width)
-    grid_y = int(env.car.y // env.grid.section_height)
+    grid_x, grid_y = env.grid.to_grid(env.car.x, env.car.y)
 
     # reward hitting the target
     if (grid_x, grid_y) == env.grid.target: return 1
@@ -47,24 +44,14 @@ def movement_to_action(steer, throttle):
 def degrees(rad: float) -> int:
     return int((rad / np.pi) * 180)
 
-def run_episode(seed: int, agent: DQNAgent, clutter: float, q_func: Callable, manual=False):
+def run_episode(seed: int, agent: DQNAgent, clutter: float, q_func: Callable):
     total_reward = 0
     state = env.reset(seed, clutter)
+    agent.replay.clear()
     done = False
     while not done:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                exit()
-        
-        throttle, steer = 0, 0
-        if manual:
-            throttle = 1
-            if pygame.key.get_pressed()[pygame.K_a]: steer = -1
-            if pygame.key.get_pressed()[pygame.K_d]: steer = 1
-            action = movement_to_action(steer, throttle)
-        else:
-            action = agent.get_action(state)
-            steer, throttle = action_to_movement(action)
+        action = agent.get_action(state)
+        steer, throttle = action_to_movement(action)
 
         # calculate the state
         next_state, done = env.step(steer, throttle)
@@ -85,8 +72,6 @@ def run_episode(seed: int, agent: DQNAgent, clutter: float, q_func: Callable, ma
         agent.replay.add((state, action, reward, next_state, float(done)))
         agent.train_step()
         state = next_state
-
-        if manual: clock.tick(30)
     
     print(f"Episode {episode} — Reward: {total_reward:.2f}, Epsilon: {agent.epsilon:.2f}")
 
@@ -103,7 +88,7 @@ for episode in range(episodes):
     run_episode(
         episode, 
         agent, 
-        0 if episode < 200 else 0.1, # first 200 iterations have no obsticles
+        0.1 if episode < 200 else 0.1, # first 200 iterations have no obsticles
         reward_alignment if episode < 100 else normal_reward, # award alignment at first
         manual=False)
 

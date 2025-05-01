@@ -1,10 +1,7 @@
-import environment
-import pygame
+from sim.environment import RacingEnv
 from q_learning.agent import DQNAgent
 
-env = environment.RacingEnv()
-
-clock = pygame.time.Clock()
+env = RacingEnv()
 
 def action_to_movement(action):
     steer, throttle = 0, 1
@@ -18,11 +15,6 @@ def run_episode(num, agent=None):
     state = env.reset(num, (6, 6))
     done = False
     while not done:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                exit()
-        
-        
         throttle, steer = 0, 0
         action = agent.get_action(state)
         steer, throttle = action_to_movement(action)
@@ -32,10 +24,8 @@ def run_episode(num, agent=None):
 
         env.render()
 
-        clock.tick(30)
 
-
-env = environment.RacingEnv()
+env = RacingEnv()
 state_dim = 34
 action_dim = 3
 agent = DQNAgent(state_dim, action_dim)
